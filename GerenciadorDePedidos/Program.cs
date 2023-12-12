@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Identity.UI;
 using Microsoft.EntityFrameworkCore;
 using GerenciadorDePedidos.Areas.Identity;
 using GerenciadorDePedidos.Data;
+using AutoMapper;
+using GerenciadorDePedidos.Repository;
 
 namespace GerenciadorDePedidos;
 
@@ -17,15 +19,23 @@ public class Program
 
         // Add services to the container.
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-        builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(connectionString));
+        builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
+            options.UseSqlServer(connectionString), ServiceLifetime.Transient);
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
         builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
             .AddEntityFrameworkStores<ApplicationDbContext>();
         builder.Services.AddRazorPages();
         builder.Services.AddServerSideBlazor();
         builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
-        
+
+        builder.Services.AddTransient<IRepositoryCollection, RepositoryCollection>();
+        var mapperConfig = new MapperConfiguration(mc =>
+        {
+            mc.AddProfile(new AutoMapperProfile());
+        });
+
+        IMapper mapper = mapperConfig.CreateMapper();
+        builder.Services.AddSingleton(mapper);
 
         var app = builder.Build();
 
