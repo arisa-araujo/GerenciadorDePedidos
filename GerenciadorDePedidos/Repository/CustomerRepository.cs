@@ -1,6 +1,8 @@
+using System.Security.Claims;
 using AutoMapper;
 using GerenciadorDePedidos.Data;
 using GerenciadorDePedidos.DTOS;
+using Microsoft.EntityFrameworkCore;
 
 namespace GerenciadorDePedidos.Repository
 {

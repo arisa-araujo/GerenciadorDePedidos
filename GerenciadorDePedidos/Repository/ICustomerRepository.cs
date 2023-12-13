@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using GerenciadorDePedidos.Data;
 using GerenciadorDePedidos.DTOS;
 

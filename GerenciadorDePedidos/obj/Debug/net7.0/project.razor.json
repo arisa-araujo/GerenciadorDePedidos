@@ -13,6 +13,43 @@
   "ProjectWorkspaceState": {
     "TagHelpers": [
       {
+        "HashCode": -518079123,
+        "Kind": "Components.Component",
+        "Name": "GerenciadorDePedidos.Pages.Index",
+        "AssemblyName": "GerenciadorDePedidos",
+        "CaseSensitive": true,
+        "TagMatchingRules": [
+          {
+            "TagName": "Index"
+          }
+        ],
+        "Metadata": {
+          "Common.TypeName": "GerenciadorDePedidos.Pages.Index",
+          "Common.TypeNameIdentifier": "Index",
+          "Common.TypeNamespace": "GerenciadorDePedidos.Pages",
+          "Runtime.Name": "Components.IComponent"
+        }
+      },
+      {
+        "HashCode": 264932841,
+        "Kind": "Components.Component",
+        "Name": "GerenciadorDePedidos.Pages.Index",
+        "AssemblyName": "GerenciadorDePedidos",
+        "CaseSensitive": true,
+        "TagMatchingRules": [
+          {
+            "TagName": "GerenciadorDePedidos.Pages.Index"
+          }
+        ],
+        "Metadata": {
+          "Common.TypeName": "GerenciadorDePedidos.Pages.Index",
+          "Common.TypeNameIdentifier": "Index",
+          "Common.TypeNamespace": "GerenciadorDePedidos.Pages",
+          "Components.NameMatch": "Components.FullyQualifiedNameMatch",
+          "Runtime.Name": "Components.IComponent"
+        }
+      },
+      {
         "HashCode": 563130416,
         "Kind": "Components.Component",
         "Name": "GerenciadorDePedidos.App",

@@ -84,3 +84,5 @@ C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\obj\Debug\net7.0\refint\Gerenci
 C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\obj\Debug\net7.0\GerenciadorDePedidos.pdb
 C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\obj\Debug\net7.0\GerenciadorDePedidos.genruntimeconfig.cache
 C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\obj\Debug\net7.0\ref\GerenciadorDePedidos.dll
+C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\AutoMapper.dll
+C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
