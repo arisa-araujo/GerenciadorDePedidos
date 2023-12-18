@@ -1,0 +1,16 @@
+@page "/orderterms"
+
+<PageTitle>Condições de Pagamento</PageTitle>
+<AuthorizeView>
+    <Authorized>
+        <OrderTermsComponent/>
+    </Authorized>
+    <NotAuthorized>
+        Faça login para visualizar e cadastrar condições de pagamento.
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+
+}

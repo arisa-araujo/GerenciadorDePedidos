@@ -65,6 +65,10 @@
             "Microsoft.EntityFrameworkCore.Tools": {
               "target": "Package",
               "version": "[7.0.10, )"
+            },
+            "Radzen.Blazor": {
+              "target": "Package",
+              "version": "[4.23.2, )"
             }
           },
           "imports": [

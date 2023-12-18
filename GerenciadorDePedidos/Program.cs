@@ -8,6 +8,7 @@ using GerenciadorDePedidos.Areas.Identity;
 using GerenciadorDePedidos.Data;
 using AutoMapper;
 using GerenciadorDePedidos.Repository;
+using Radzen;
 
 namespace GerenciadorDePedidos;
 
@@ -27,7 +28,8 @@ public class Program
         builder.Services.AddRazorPages();
         builder.Services.AddServerSideBlazor();
         builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<IdentityUser>>();
-
+        builder.Services.AddScoped<DialogService>();
+        
         builder.Services.AddTransient<IRepositoryCollection, RepositoryCollection>();
         var mapperConfig = new MapperConfiguration(mc =>
         {

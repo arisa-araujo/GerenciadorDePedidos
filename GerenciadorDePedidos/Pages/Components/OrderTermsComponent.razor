@@ -1,0 +1,132 @@
+@inject IRepositoryCollection repo
+@inject AuthenticationStateProvider authState
+
+<h3>Cadastrar/Editar Condições de Pagamento</h3>
+<AuthorizeView>
+    <Authorized>
+        <div class="text-danger">@message</div>
+        <RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle_outline" class="mt-2 mb-4" Text="Cadastrar novo prazo"
+                        Click="@InsertRow" Disabled=@(orderTermToInsert != null || orderTermToUpdate != null) />
+        <RadzenDataGrid @ref="orderTermsGrid" AllowAlternatingRows="false" AllowSorting="true" EditMode="DataGridEditMode.Single" 
+                        Data="@orderTerms" TItem="OrderTermsDTO" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow" Sort="@Reset">
+        <Columns>
+            <RadzenDataGridColumn TItem="OrderTermsDTO" Property="Name" Title="Prazo de Pagamento" Width="200px">
+                <EditTemplate Context="orderTerms">
+                    <RadzenTextBox @bind-Value="orderTerms.Name" Style="width:100%; display: block" Name="Prazo de Pagamento" />
+                    <RadzenRequiredValidator Text="Prazo é obrigatório" Component="Prazo de Pagamento" Popup="true" />
+                </EditTemplate>
+            </RadzenDataGridColumn>
+
+            <RadzenDataGridColumn TItem="OrderTermsDTO" Context="orderTerm" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="150px">
+                    <Template Context="orderTerm">
+                        <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(() => EditRow(orderTerm))" @onclick:stopPropagation="true">
+                        </RadzenButton>
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(orderTerm))" @onclick:stopPropagation="true">
+                        </RadzenButton>
+                    </Template>
+                    <EditTemplate Context="orderTerm">
+                        <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(() => SaveRow(orderTerm))">
+                        </RadzenButton>
+                        <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@((args) => CancelEdit(orderTerm))">
+                        </RadzenButton>
+                        <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(orderTerm))">
+                        </RadzenButton>
+                    </EditTemplate>
+                </RadzenDataGridColumn>
+
+        </Columns>
+        </RadzenDataGrid>
+    </Authorized>
+</AuthorizeView>
+
+@code{
+
+    List<OrderTermsDTO> orderTerms = new();
+
+    string? message = string.Empty;
+    RadzenDataGrid<OrderTermsDTO>? orderTermsGrid;
+    OrderTermsDTO? orderTermToInsert;
+    OrderTermsDTO? orderTermToUpdate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        orderTerms = await repo.OrderTerms.GetAllMine(auth.User);
+    }
+
+    async Task EditRow(OrderTermsDTO orderTerm)
+    {
+        message = "";
+        orderTermToUpdate = orderTerm;
+        await orderTermsGrid!.EditRow(orderTerm);
+    }
+
+    async Task OnUpdateRow(OrderTermsDTO orderTerm)
+    {
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        Reset();
+        await repo.OrderTerms.UpdateMine(auth.User, orderTerm);
+        await repo.Save();
+    }
+
+    async Task SaveRow(OrderTermsDTO orderTerm)
+    {
+        message = "";
+        await orderTermsGrid!.UpdateRow(orderTerm);
+    }
+
+    void CancelEdit(OrderTermsDTO orderTerm)
+    {
+        Reset();
+        orderTermsGrid!.CancelEditRow(orderTerm);
+    }
+
+    async Task DeleteRow(OrderTermsDTO orderTerm)
+    {
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        Reset();
+        try
+        {
+            bool found = await repo.OrderTerms.DeleteMine(auth.User, orderTerm.Id);
+            if (found)
+            {
+                await repo.Save();
+                this.orderTerms = await repo.OrderTerms.GetAllMine(auth.User);
+                await orderTermsGrid!.Reload();
+            }
+            else
+            {
+                orderTermsGrid!.CancelEditRow(orderTerm);
+                await orderTermsGrid.Reload();
+            }
+        }
+        catch(RepositoryDeleteException)
+        {
+            message = "Não é possível excluir essa condição de pagamento, pois está sendo usada em um pedido.";
+        }
+    }
+
+    async Task InsertRow()
+    {
+        message = "";
+        orderTermToInsert = new OrderTermsDTO();
+        await orderTermsGrid!.InsertRow(orderTermToInsert);
+    }
+
+    async Task OnCreateRow(OrderTermsDTO orderTerm)
+    {
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        orderTerm.Id = await repo.OrderTerms.AddMine(auth.User, orderTerm);
+        await repo.Save();
+        this.orderTerms = await repo.OrderTerms.GetAllMine(auth.User);
+        orderTermToInsert = null;
+    }
+
+    void Reset()
+    {
+        message = "";
+        orderTermToInsert = null;
+        orderTermToUpdate = null;
+    }
+
+}

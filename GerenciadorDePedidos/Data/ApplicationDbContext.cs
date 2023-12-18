@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace GerenciadorDePedidos.Data;
 
@@ -31,6 +32,8 @@ public class ApplicationDbContext : IdentityDbContext
         RemoveFixups(builder, typeof(Customer));
         RemoveFixups(builder, typeof(OrderTerms));
         RemoveFixups(builder, typeof(OrderItem));
+
+        builder.Entity<Order>().Property(u => u.OrderNumber).Metadata.SetAfterSaveBehavior(PropertySaveBehavior.Ignore);
 
         // calculates the total price 
         builder.Entity<OrderItem>()

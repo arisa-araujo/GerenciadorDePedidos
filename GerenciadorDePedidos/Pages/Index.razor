@@ -1,34 +1,19 @@
 ﻿@page "/"
-@inject IRepositoryCollection repo
-@inject AuthenticationStateProvider authState
 
-<PageTitle>Index</PageTitle>
+<PageTitle>Pedidos</PageTitle>
+<AuthorizeView>
+    <Authorized>
+        <OrdersComponent/>
+    </Authorized>
+    <NotAuthorized>
+        Faça login para visualizar e cadastrar pedidos.
+    </NotAuthorized>
+</AuthorizeView>
 
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
-@if (customers is null)
-{
-    <p>Carregando clientes...</p>
-} 
-else
-{
-    foreach(CustomerDTO c in customers)
-    {
-        <p>@c.Name</p>
-    }
-}
 
 
 @code {
 
-    private List<CustomerDTO> customers = null!;
-    protected override async Task OnInitializedAsync()
-    {
-        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
-
-        customers = await repo.Customer.GetAllMine(auth.User);
-    }
 }
 
 

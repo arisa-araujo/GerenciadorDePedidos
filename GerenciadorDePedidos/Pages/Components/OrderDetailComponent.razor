@@ -1,0 +1,243 @@
+@inject IRepositoryCollection repo
+@inject NavigationManager navManager
+@inject DialogService DialogService
+@inject AuthenticationStateProvider authState
+
+<div class="text-danger">@message</div>
+<div class="mb-3 row">
+    <label class="col-sm-2 col-form-label">Número do Pedido</label>
+    <div class="col-sm-10">
+        @order.OrderNumber
+    </div>
+</div>
+<div class="mb-3 row">
+    <label class="col-sm-2 col-form-label" for="inputDescription">Cliente</label>
+    <div class="col-sm-10">
+        <RadzenDropDown @bind-Value=@order.CustomerId Data=@customers TextProperty="Name" ValueProperty="Id" Style="width: 100%; max-width: 400px;" Change="@OnChange" />
+    </div>
+</div>
+<div class="mb-3 row">
+    <label class="col-sm-2 col-form-label" for="inputDescription">Condições de Pagamento</label>
+    <div class="col-sm-10">
+        <RadzenDropDown @bind-Value=@order.OrderTermsId Data=@terms TextProperty="Name" ValueProperty="Id" Style="width: 100%; max-width: 400px;" Change="@OnChange" />
+    </div>
+</div>
+<div class="mb-3 row">
+    <label class="col-sm-2 col-form-label" for="inputDescription">Data de Criação</label>
+    <div class="col-sm-10">
+        <RadzenDatePicker @bind-Value=@order.OrderDate ShowTime="false" DateFormat="dd/MM/yyyy" Change="@OnChange" />
+    </div>
+</div>
+<div class="mb-3 row">
+    <label class="col-sm-2 col-form-label" for="paidAmount">Total Pago</label>
+    <div class="col-sm-10">
+        <RadzenNumeric id="paidAmount" ShowUpDown="false" Format="c" TValue="double" @bind-Value=@order.Paid Change="@OnChange" />
+    </div>
+</div>
+
+<RadzenButton ButtonStyle="ButtonStyle.Primary" class="mt-2 mb-4" Text="Salvar" Click="@OnSaveChanges" Disabled=@savedisabled />
+
+<h3>Itens do Pedidos:</h3>
+<RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle_outline" class="mt-2 mb-4" Text="Adicionar novo item" Click="@InsertRow" Disabled=@(itemToInsert != null || itemToUpdate != null) />
+<RadzenDataGrid @ref="orderItemsGrid" AllowAlternatingRows="false" AllowSorting="true" EditMode="DataGridEditMode.Single"
+                Data="@items" TItem="OrderItemDTO" RowUpdate="@OnUpdateRow" RowCreate="@OnCreateRow" Sort="@Reset" ColumnWidth="200px">
+    <Columns>
+        <RadzenDataGridColumn TItem="OrderItemDTO" Property="Description" Title="Descrição do Produto" Width="200px">
+            <EditTemplate Context="item">
+                <RadzenTextBox @bind-Value="item.Description" Style="width:100%; display: block" Name="Description" />
+                <RadzenRequiredValidator Text="Nome do produto é obrigatório" Component="Description" Popup="true" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="OrderItemDTO" FormatString="{0:C}" Property="UnitPrice" Title="Preço unitário" Width="100px">
+            <EditTemplate Context="item">
+                <RadzenNumeric @bind-Value="item.UnitPrice" ShowUpDown="false" Format="c" TValue="double" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="OrderItemDTO" Property="Quantity" Title="Quantidade" Width="50px">
+            <EditTemplate Context="item">
+                <RadzenNumeric @bind-Value="item.Quantity" ShowUpDown="false" TValue="double" Name="Quantity" />
+                <RadzenNumericRangeValidator Min="0" Text="O valor precisa ser maior que ZERO" Component="Quantity" Popup="true" />
+            </EditTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="OrderItemDTO" Property="Total" Title="Total" Width="150px">
+            <Template Context="item">
+                @string.Format("{0:c}",item.UnitPrice*item.Quantity)
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="OrderItemDTO" Context="item" Filterable="false" Sortable="false" TextAlign="TextAlign.Right" Width="120px">
+            <Template Context="item">
+                <RadzenButton Icon="edit" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@(args => EditRow(item))" @onclick:stopPropagation="true">
+                </RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(item))" @onclick:stopPropagation="true">
+                </RadzenButton>
+            </Template>
+            <EditTemplate Context="item">
+                <RadzenButton Icon="check" ButtonStyle="ButtonStyle.Success" Variant="Variant.Flat" Size="ButtonSize.Medium" Click="@((args) => SaveRow(item))">
+                </RadzenButton>
+                <RadzenButton Icon="close" ButtonStyle="ButtonStyle.Light" Variant="Variant.Flat" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@((args) => CancelEdit(item))">
+                </RadzenButton>
+                <RadzenButton ButtonStyle="ButtonStyle.Danger" Icon="delete" Variant="Variant.Flat" Shade="Shade.Lighter" Size="ButtonSize.Medium" class="my-1 ms-1" Click="@(args => DeleteRow(item))">
+                </RadzenButton>
+            </EditTemplate>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+<p>Total: @string.Format("{0:c}",OrderTotal)</p>
+<br />
+<br />
+
+<RadzenButton ButtonStyle="ButtonStyle.Success" Icon="delete" class="mt-2 mb-4" Text="Excluir Pedido" Click="@DeleteOrder" Disabled=@(itemToInsert != null || itemToUpdate != null) />
+
+
+
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = String.Empty;
+
+    List<CustomerDTO> customers = new();
+    List<OrderTermsDTO> terms = new();
+    OrderDTO order = new();
+    List<OrderItemDTO> items = new();
+    RadzenDataGrid<OrderItemDTO>? orderItemsGrid;
+    OrderItemDTO? itemToInsert;
+    OrderItemDTO? itemToUpdate;
+
+    double OrderTotal = 0;
+    string message = string.Empty;
+
+    bool savedisabled = true;
+
+    public void OnChange()
+    {
+        savedisabled = false;
+    }
+
+    async Task DeleteOrder()
+    {
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        bool? result = await DialogService.Confirm("Tem certeza?", "Excluir Pedido", new ConfirmOptions() { OkButtonText = "Sim", CancelButtonText = "Não" }); ;
+        if (result == true)
+        {
+            await repo.Order.DeleteWithOrderItems(auth.User, Id);
+            await repo.Save();
+            navManager.NavigateTo("/");
+        }
+    }
+
+
+    public async Task OnSaveChanges()
+    {
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        await repo.Order.UpdateMine(auth.User, order);
+        await repo.Save();
+        UpdateTotals();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        customers = await repo.Customer.GetAllMine(auth.User);
+        terms = await repo.OrderTerms.GetAllMine(auth.User);
+        order = await repo.Order.GetMineById(auth.User, Id);
+        items = await repo.OrderItem.GetAllByOrderId(auth.User, Id);
+        UpdateTotals();
+    }
+   
+    public void UpdateTotals()
+    {
+        OrderTotal = 0;
+        foreach (OrderItemDTO item in items)
+        {
+            OrderTotal = OrderTotal + item.UnitPrice * item.Quantity;
+        }
+    }
+
+
+    void Reset()
+    {
+        message = "";
+        itemToInsert = null;
+        itemToUpdate = null;
+    }
+
+    async Task EditRow(OrderItemDTO item)
+    {
+        message = "";
+        itemToUpdate = item;
+        await orderItemsGrid!.EditRow(item);
+    }
+
+    async Task OnUpdateRow(OrderItemDTO item)
+    {
+        Reset();
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        await repo.OrderItem.UpdateMine(auth.User, item);
+        await repo.Save();
+        UpdateTotals();
+    }
+
+    async Task SaveRow(OrderItemDTO item)
+    {
+        await orderItemsGrid!.UpdateRow(item);
+    }
+    void CancelEdit(OrderItemDTO item)
+    {
+        Reset();
+
+        orderItemsGrid!.CancelEditRow(item);
+
+    }
+
+    async Task DeleteRow(OrderItemDTO item)
+    {
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        Reset();
+        try
+        {
+            bool found = await repo.OrderItem.DeleteMine(auth.User, item.Id);
+            if (found)
+            {
+                await repo.Save();
+                this.items = await repo.OrderItem.GetAllMine(auth.User);
+                await orderItemsGrid!.Reload();
+            }
+            else
+            {
+                orderItemsGrid!.CancelEditRow(item);
+                await orderItemsGrid!.Reload();
+            }
+        }
+        catch (RepositoryDeleteException)
+        {
+            // can't delete because would break integrity!
+            message = "Não é possível excluir o item, pois ele está sendo usado em um pedido.";
+        }
+        UpdateTotals();
+
+    }
+
+
+    async Task InsertRow()
+    {
+        message = "";
+        itemToInsert = new OrderItemDTO();
+        await orderItemsGrid!.InsertRow(itemToInsert);
+
+    }
+
+    async Task OnCreateRow(OrderItemDTO item)
+    {
+        Reset();
+        AuthenticationState auth = await authState.GetAuthenticationStateAsync();
+        item.OrderId = Id;
+        item.Id = await repo.OrderItem.AddMine(auth.User, item);
+        await repo.Save();
+        this.items = await repo.OrderItem.GetAllByOrderId(auth.User, Id);
+        UpdateTotals();
+    }
+}

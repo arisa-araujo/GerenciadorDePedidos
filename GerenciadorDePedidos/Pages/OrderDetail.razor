@@ -1,0 +1,9 @@
+@page "/orderdetail/"
+@page "/orderdetail/{id}"
+
+<h3>Detalhes do Pedido</h3>
+<OrderDetailComponent Id="@id"/>
+@code {
+    [Parameter]
+    public string? id { get; set; }
+}

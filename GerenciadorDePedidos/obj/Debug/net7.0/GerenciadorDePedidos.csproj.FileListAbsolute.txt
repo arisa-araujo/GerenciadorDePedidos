@@ -86,3 +86,9 @@ C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\obj\Debug\net7.0\GerenciadorDeP
 C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\obj\Debug\net7.0\ref\GerenciadorDePedidos.dll
 C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\AutoMapper.dll
 C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll
+C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\Microsoft.AspNetCore.Authorization.dll
+C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\Microsoft.AspNetCore.Components.dll
+C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\Microsoft.AspNetCore.Metadata.dll
+C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\Radzen.Blazor.dll
+C:\dev\GerenciadorDePedidos\GerenciadorDePedidos\bin\Debug\net7.0\System.Linq.Dynamic.Core.dll

@@ -1,0 +1,16 @@
+@page "/customers"
+
+<PageTitle>Clientes</PageTitle>
+<AuthorizeView>
+    <Authorized>
+        <CustomerComponent/>
+    </Authorized>
+    <NotAuthorized>
+        Faça login para visualizar e cadastrar clientes.
+    </NotAuthorized>
+</AuthorizeView>
+
+
+@code {
+
+}

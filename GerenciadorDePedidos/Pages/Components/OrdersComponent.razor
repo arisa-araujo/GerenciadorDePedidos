@@ -1,0 +1,122 @@
+@inject IRepositoryCollection repo
+@inject NavigationManager nav
+@inject AuthenticationStateProvider authstate
+<div class="text-danger">@Message</div>
+<RadzenDropDown @bind-Value=@dropdownvalue Data=@customers TextProperty="Name" ValueProperty="Id" Style="width: 100%; max-width: 400px;" />
+
+
+<RadzenButton ButtonStyle="ButtonStyle.Success" Icon="add_circle_outline" class="mt-2 mb-4" Text="Novo pedido" Click="@AddOrder" />
+<RadzenDataGrid @ref="ordersGrid" AllowAlternatingRows="false" AllowSorting="true" AllowFiltering="true" FilterMode="FilterMode.Simple" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive"
+                Data="@orders" TItem="OrderDTO" ColumnWidth="200px">
+    <Columns>
+
+
+        <RadzenDataGridColumn TItem="OrderDTO" Property="OrderNumber" Title="Número do pedido" Filterable="false" Width="120px" />
+        <RadzenDataGridColumn TItem="OrderDTO" FormatString="{0:dd/MM/yyyy}" Property="OrderDate" Title="Data" Width="120px" />
+        <RadzenDataGridColumn TItem="OrderDTO" Property="CustomerName" Title="" Type="typeof(IEnumerable<string>)" Width=" 120px"
+                              FilterValue="@selectedCustomerNames" FilterOperator="FilterOperator.Contains" LogicalFilterOperator="LogicalFilterOperator.Or">
+            <FilterTemplate>
+                <RadzenDropDown @bind-Value=@selectedCustomerNames Style="width:100%;"
+                                Change=@OnSelectedCustomerNameChange Data="@customerNames" AllowClear="true" Multiple="true" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="Order" Property="OrderTermsName" Title="Condições" Type="typeof(IEnumerable<string>)" Width="120px"
+                              FilterValue="@selectedOrderTerms" FilterOperator="FilterOperator.Contains" LogicalFilterOperator="LogicalFilterOperator.Or">
+            <FilterTemplate>
+                <RadzenDropDown @bind-Value=@selectedOrderTerms Style="width:100%;"
+                                Change=@OnSelectedOrderTermsChange Data="@orderTermsValues" AllowClear="true" Multiple="true" />
+            </FilterTemplate>
+        </RadzenDataGridColumn>
+
+
+
+
+        <RadzenDataGridColumn TItem="OrderDTO" Property="OrderTotal" Title="Total" Filterable="false" Width="120px">
+            <Template Context="order">
+                @string.Format("{0:c}",order.OrderTotal)
+            </Template>
+        </RadzenDataGridColumn>
+
+        <RadzenDataGridColumn TItem="OrderDTO" Property="Id" Title="" Width="120px" Filterable="false">
+            <Template Context="order">
+                <RadzenButton ButtonStyle="ButtonStyle.Info" Variant="Variant.Flat" Shade="Shade.Lighter" Icon="description" class="m-1" Click=@(() => OpenOrder(order.Id)) Text="Edit" />
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+
+@code {
+
+    List<OrderDTO> orders = new();
+    List<CustomerDTO> customers = new();
+    List<OrderTermsDTO> orderTerms = new();
+    RadzenDataGrid<OrderDTO>? ordersGrid;
+
+    string Message = string.Empty;
+    string dropdownvalue = string.Empty;
+
+    IEnumerable<string>? selectedCustomerNames;
+    List<string> customerNames = new List<string>();
+    void OnSelectedCustomerNameChange(object value)
+    {
+        if (selectedCustomerNames != null && !selectedCustomerNames.Any())
+        {
+            selectedCustomerNames = null;
+        }
+    }
+
+    IEnumerable<string>? selectedOrderTerms;
+    List<string> orderTermsValues = new List<string>();
+    void OnSelectedOrderTermsChange(object value)
+    {
+        if (selectedOrderTerms != null && !selectedOrderTerms.Any())
+        {
+            selectedOrderTerms = null;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        AuthenticationState auth = await authstate.GetAuthenticationStateAsync();
+
+        @* await repo.Customer.Seed(auth.User);
+        await repo.InvoiceTerms.Seed(auth.User);
+        await repo.Save(); *@
+
+        customers = await repo.Customer.GetAllMine(auth.User);
+        foreach (CustomerDTO c in customers)
+            customerNames.Add(c.Name!);
+
+        orderTerms = await repo.OrderTerms.GetAllMine(auth.User);
+        foreach (OrderTermsDTO i in orderTerms)
+            orderTermsValues.Add(i.Name);
+
+        if (customers.Count > 0)
+            dropdownvalue = customers[0].Id;
+        orders = await repo.Order.GetAllMineFlat(auth.User);
+
+    }
+
+
+    public void OpenOrder(string Id)
+    {
+        nav.NavigateTo("/orderdetail/" + Id);
+    }
+
+    public async Task AddOrder()
+    {
+        AuthenticationState auth = await authstate.GetAuthenticationStateAsync();
+        // create an order and redirect to it
+        List<OrderTermsDTO> terms = await repo.OrderTerms.GetAllMine(auth.User);
+        string id = await repo.Order.AddMine(auth.User, new OrderDTO
+            {
+                OrderDate = DateTime.Now,
+                Paid = 0,
+                CustomerId = dropdownvalue,
+                OrderTermsId = terms[0].Id
+            });
+        await repo.Save();
+        nav.NavigateTo("/orderdetail/" + id);
+    }
+}
